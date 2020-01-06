@@ -6,7 +6,9 @@
  * - returns undefined if no matching book is found
  ****************************************************************/
 function getBookById(bookId, books) {
-  // Your code goes here
+    // Your code goes here
+    let filtered = books.filter(x => x.id == bookId);
+    return filtered.length > 0 ? filtered[0] : undefined;
 }
 
 /**************************************************************
@@ -17,7 +19,9 @@ function getBookById(bookId, books) {
  * - returns undefined if no matching author is found
  ****************************************************************/
 function getAuthorByName(authorName, authors) {
-  // Your code goes here
+    // Your code goes here
+    let filtered = authors.filter(x => x['name'].toUpperCase() === authorName.toUpperCase());
+    return filtered.length > 0 ? filtered[0] : undefined;
 }
 
 /**************************************************************
@@ -27,7 +31,13 @@ function getAuthorByName(authorName, authors) {
  *    [{ author: <NAME>, bookCount: <NUMBER_OF_BOOKS> }]
  ****************************************************************/
 function bookCountsByAuthor(authors) {
-  // Your code goes here
+    // Your code goes here
+    return authors.map(x => {
+        return {
+            author: x['name'],
+            bookCount: x['books'].length
+        };
+    });
 }
 
 /**************************************************************
@@ -38,11 +48,15 @@ function bookCountsByAuthor(authors) {
  *    { <COLOR>: [<BOOK_TITLES>] }
  ****************************************************************/
 function booksByColor(books) {
-  const colors = {};
+    const colors = {};
+    books.forEach(book => {
+        if (!colors[book.color]) {
+            colors[book.color] = [];
+        }
+        colors[book.color].push(book.title);
+    })
 
-  // Your code goes here
-
-  return colors;
+    return colors;
 }
 
 /**************************************************************
@@ -54,7 +68,12 @@ function booksByColor(books) {
  *    ["The Hitchhikers Guide", "The Meaning of Liff"]
  ****************************************************************/
 function titlesByAuthorName(authorName, authors, books) {
-  // Your code goes here
+    // Your code goes here
+    let author = authors.filter(x => x.name.toUpperCase() == authorName.toUpperCase())[0]
+    if (!author) { return [] }
+    let author_books = author.books;
+    let author_books_title = books.filter(x => author_books.includes(x.id));
+    return author_books_title.map(x => x.title);
 }
 
 /**************************************************************
@@ -65,7 +84,16 @@ function titlesByAuthorName(authorName, authors, books) {
  * Note: assume there will never be a tie
  ****************************************************************/
 function mostProlificAuthor(authors) {
-  // Your code goes here
+    // Your code goes here
+    let bookCounts = bookCountsByAuthor(authors)
+    let author = { 'bookCount': 0 };
+
+    bookCounts.forEach(element => {
+        if (element.bookCount > author.bookCount) {
+            author = element
+        }
+    });
+    return author.author
 }
 
 /**************************************************************
@@ -92,7 +120,24 @@ function mostProlificAuthor(authors) {
  * BONUS: REMOVE DUPLICATE BOOKS
  ****************************************************************/
 function relatedBooks(bookId, authors, books) {
-  // Your code goes here
+    // Your code goes here
+    // let _titles = titlesByAuthorName(authors[0].name, authors, books)
+    // console.log(_titles);
+    // return
+    let book = books.filter(x => x.id == bookId)[0]
+    if (!book) { return }
+
+
+    let book_authors_name = book.authors.map(x => x.name);
+
+    let titles = []
+    book_authors_name.forEach(authorName => {
+        let _titles = titlesByAuthorName(authorName, authors, books)
+        titles = titles.concat(_titles);
+    });
+
+    // console.log(titles);
+    return titles
 }
 
 /**************************************************************
@@ -102,18 +147,19 @@ function relatedBooks(bookId, authors, books) {
  *   co-authored the greatest number of books
  ****************************************************************/
 function friendliestAuthor(authors) {
-  // Your code goes here
+    // Your code goes here
+    return mostProlificAuthor(authors)
 }
 
 module.exports = {
-  getBookById,
-  getAuthorByName,
-  bookCountsByAuthor,
-  booksByColor,
-  titlesByAuthorName,
-  mostProlificAuthor,
-  relatedBooks,
-  friendliestAuthor
+    getBookById,
+    getAuthorByName,
+    bookCountsByAuthor,
+    booksByColor,
+    titlesByAuthorName,
+    mostProlificAuthor,
+    relatedBooks,
+    friendliestAuthor
 };
 
 /**
@@ -121,8 +167,8 @@ module.exports = {
  * want to manually test your code
  */
 
-// const authors = require("./authors.json");
-// const books = require("./books.json");
+const authors = require("./authors.json");
+const books = require("./books.json");
 
 // console.log(getBookById(12, books));
 // console.log(getAuthorByName("J.K. Rowling", authors));
