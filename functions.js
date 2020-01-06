@@ -121,12 +121,8 @@ function mostProlificAuthor(authors) {
  ****************************************************************/
 function relatedBooks(bookId, authors, books) {
     // Your code goes here
-    // let _titles = titlesByAuthorName(authors[0].name, authors, books)
-    // console.log(_titles);
-    // return
     let book = books.filter(x => x.id == bookId)[0]
     if (!book) { return }
-
 
     let book_authors_name = book.authors.map(x => x.name);
 
@@ -136,7 +132,6 @@ function relatedBooks(bookId, authors, books) {
         titles = titles.concat(_titles);
     });
 
-    // console.log(titles);
     return titles
 }
 
