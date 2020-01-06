@@ -20,7 +20,7 @@ function getBookById(bookId, books) {
  ****************************************************************/
 function getAuthorByName(authorName, authors) {
     // Your code goes here
-    let filtered = authors.filter(x => x['name'].toUpperCase() === authorName.toUpperCase());
+    let filtered = authors.filter(x => x.name.toUpperCase() === authorName.toUpperCase());
     return filtered.length > 0 ? filtered[0] : undefined;
 }
 
@@ -32,12 +32,10 @@ function getAuthorByName(authorName, authors) {
  ****************************************************************/
 function bookCountsByAuthor(authors) {
     // Your code goes here
-    return authors.map(x => {
-        return {
-            author: x['name'],
-            bookCount: x['books'].length
-        };
-    });
+    return authors.map(author => ({
+        author: author.name,
+        bookCount: author.books.length
+    }))
 }
 
 /**************************************************************
@@ -51,9 +49,10 @@ function booksByColor(books) {
     const colors = {};
     books.forEach(book => {
         if (!colors[book.color]) {
-            colors[book.color] = [];
+            colors[book.color] = [book.title];
+        } else {
+            colors[book.color].push(book.title);
         }
-        colors[book.color].push(book.title);
     })
 
     return colors;
@@ -69,11 +68,9 @@ function booksByColor(books) {
  ****************************************************************/
 function titlesByAuthorName(authorName, authors, books) {
     // Your code goes here
-    let author = authors.filter(x => x.name.toUpperCase() == authorName.toUpperCase())[0]
+    let author = getAuthorByName(authorName, authors)
     if (!author) { return [] }
-    let author_books = author.books;
-    let author_books_title = books.filter(x => author_books.includes(x.id));
-    return author_books_title.map(x => x.title);
+    return author.books.map(bookID => getBookById(bookID, books).title)
 }
 
 /**************************************************************
@@ -84,16 +81,14 @@ function titlesByAuthorName(authorName, authors, books) {
  * Note: assume there will never be a tie
  ****************************************************************/
 function mostProlificAuthor(authors) {
-    // Your code goes here
-    let bookCounts = bookCountsByAuthor(authors)
-    let author = { 'bookCount': 0 };
-
-    bookCounts.forEach(element => {
-        if (element.bookCount > author.bookCount) {
-            author = element
+    let prolificAuthor = authors[0]
+    authors.forEach(author => {
+        if (author.books.length > prolificAuthor.books.length) {
+            prolificAuthor = author
         }
     });
-    return author.author
+
+    return prolificAuthor.name
 }
 
 /**************************************************************
@@ -121,15 +116,15 @@ function mostProlificAuthor(authors) {
  ****************************************************************/
 function relatedBooks(bookId, authors, books) {
     // Your code goes here
-    let book = books.filter(x => x.id == bookId)[0]
-    if (!book) { return }
-
-    let book_authors_name = book.authors.map(x => x.name);
+    let book = getBookById(bookId, books)
+    let book_authors = book.authors.map(author => author.name);
 
     let titles = []
-    book_authors_name.forEach(authorName => {
-        let _titles = titlesByAuthorName(authorName, authors, books)
-        titles = titles.concat(_titles);
+    book_authors.forEach(authorName => {
+        getAuthorByName(authorName, authors)
+            .books.forEach(_book => {
+                titles.push(getBookById(_book, books).title)
+            })
     });
 
     return titles
@@ -143,7 +138,24 @@ function relatedBooks(bookId, authors, books) {
  ****************************************************************/
 function friendliestAuthor(authors) {
     // Your code goes here
-    return mostProlificAuthor(authors)
+    authors.forEach(firstAuthor => {
+        firstAuthor.coauthoringCount = 0
+        authors.forEach(secondAuthor => {
+            if (secondAuthor.name !== firstAuthor.name) {
+                const sharedBooks = secondAuthor.books.filter(bookID => firstAuthor.books.includes(bookID))
+                firstAuthor.coauthoringCount += sharedBooks.length
+            }
+        })
+    })
+
+    let friendlyAuthor = authors[0]
+    authors.forEach(author => {
+        if (author.coauthoringCount > friendlyAuthor.coauthoringCount) {
+            friendlyAuthor = author
+        }
+    });
+
+    return friendlyAuthor.name
 }
 
 module.exports = {
@@ -172,4 +184,4 @@ const books = require("./books.json");
 // console.log(titlesByAuthorName("George R.R. Martin", authors, books));
 // console.log(mostProlificAuthor(authors));
 // console.log(relatedBooks(50, authors, books));
-// console.log(friendliestAuthor(authors));
+console.log(friendliestAuthor(authors))
